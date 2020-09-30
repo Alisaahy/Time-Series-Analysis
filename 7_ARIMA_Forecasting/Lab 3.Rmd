@@ -1,0 +1,278 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Lab 3
+
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+# Install packages
+# install.packages("devtools", dependencies = TRUE)
+# install_github("jgabry/QMSS_package")
+# install.packages("ggplot2")
+# install.packages("plyr")
+# install.packages("car")
+# install.packages("data.table")
+
+library(devtools)
+library(QMSS)
+library(ggplot2)
+library(plyr)
+library(car)
+library(lmtest)
+library(MASS)
+library(sandwich)
+```
+
+## 1. Create a multivariate time series; perform any interpolations.
+```{r warning=FALSE}
+vars <- c("year", "conpress", "sex", "age", "degree", "wrkstat")
+GSS <- data.table::fread("/Users/hengyuai/Desktop/TS/Lab3/trends-gss.csv",
+  sep = ",",
+  select = vars,
+  data.table = FALSE)
+
+
+sub <- GSS[, vars]
+sub = as.data.frame(sub)
+
+sub <- mutate(sub, 
+              trustpress = ifelse(conpress < 3, 1, 0), 
+              baplus = ifelse(degree >= 3, 1, 0),
+              degreelt50 = ifelse(baplus == 1 & age < 50, 1, 0),
+              fulltime = ifelse(wrkstat == 1, 1, 0))
+```
+
+```{r warning=FALSE}
+## My QUESTION is: Are people's confidence in the press and their working status related over time in the way they are related cross-nationally and at the individual level?
+
+# get means by year
+by.year <- aggregate(subset(sub, sel = -year), list(year = sub$year), mean, na.rm = T)
+
+# interpolate for some missing years
+# add the extra years
+by.year[30:40, "year"] <- c(1979, 1981, 1992, 1995, seq(1997, 2009, 2))
+by.year <- arrange(by.year, year)
+
+# make a time series object by.year.ts and interpolate using na.approx
+by.year.ts <- ts(by.year)
+by.year.ts <- na.approx(by.year.ts)
+```
+
+```{r warning=FALSE}
+# calculate percent tvholic and percent under 50 with BA
+by.year.ts <- as.data.frame(by.year.ts)
+by.year.ts <- mutate(by.year.ts, 
+                     fulltime_pct = fulltime*100,
+                     degreelt50_pct = degreelt50*100)
+
+# only keep up to 1992 and convert back to time series object
+by.year.ts <- ts(subset(by.year.ts, year <= 1992))
+
+# correlations
+cor.vars <- c("trustpress", "fulltime_pct", "degreelt50_pct", "age", "year")
+cor.dat <- by.year.ts[, cor.vars]
+cor(cor.dat, use = "complete")
+```
+
+
+## 2. Graph the relationships between X and Y. Explain how you think Y should relate to your key Xs.
+```{r warning=FALSE}
+# Time series plots with ggplot 
+# install.packages("reshape2")
+
+# Make a character vector naming the variables we might want to plot
+keep.vars <- c("year", "trustpress", "fulltime_pct", "degreelt50_pct", "age")
+
+# Use meltMyTS to transform the data to a 3-column dataset containing a column for time, a column for variable names, and a column of values corresponding to the variable names
+
+library("reshape2")
+
+meltMyTS <- function(mv.ts.object, time.var, keep.vars){
+  # mv.ts.object = a multivariate ts object
+  # keep.vars = character vector with names of variables to keep 
+  # time.var = character string naming the time variable
+  require(reshape2)
+  
+  if(missing(keep.vars)) {
+    melt.dat <- data.frame(mv.ts.object)
+  }
+  else {
+    if (!(time.var %in% keep.vars)){
+      keep.vars <- c(keep.vars, time.var)
+    }
+    melt.dat <- data.frame(mv.ts.object)[, keep.vars]
+  }
+  melt.dat <- melt(melt.dat, id.vars = time.var)
+  colnames(melt.dat)[which(colnames(melt.dat) == time.var)] <- "time"
+  return(melt.dat)
+}
+
+plot.dat <- meltMyTS(mv.ts.object = by.year.ts, time.var = "year", keep.vars = keep.vars)
+plot.dat
+```
+
+```{r warning=FALSE}
+ggMyTS <- function(df, varlist, line = TRUE, point = TRUE, pointsize = 3, linewidth = 1.25, ...){
+  require(ggplot2)
+  # varlist = character vector with names of variables to use
+  if(missing(varlist)){
+    gg <- ggplot(df, aes(time, value, colour = variable)) 
+  }
+  else{
+    include <- with(df, variable %in% varlist)
+    gg <- ggplot(df[include,], aes(time, value, colour = variable))   
+  }
+  if(line == FALSE & point == FALSE) {
+    stop("At least one of 'line' or 'point' must be TRUE") 
+  }
+  else{
+    if(line == TRUE) gg <- gg + geom_line(size = linewidth, aes(color = variable), ...)
+    if(point == TRUE) gg <- gg + geom_point(size = pointsize, aes(color = variable), ...)
+  }
+  
+  gg + xlab("") + theme(legend.position = "bottom") + scale_x_continuous(breaks = min(df$time):max(df$time))
+} 
+
+(g_trustpress <- ggMyTS(df = plot.dat, varlist = c("trustpress")))
+(g_tvholicpct <- ggMyTS(df = plot.dat, varlist = c("fulltime_pct")))
+(g_degreelt50_pct <- ggMyTS(df = plot.dat, varlist = c("degreelt50_pct")))
+
+```
+
+Explain how you think Y should relate to your key Xs:
+From the graphs above, we can find that the percentage of people who have fulltime jobs and the percentage of people who with at least a BA increased between 1972 and 1992 overall. However, people's average confidence in press declined. Therefore, I think that people's average confidence in press was negatively related to the percentage of people with fulltime jobs and a BA under 50.
+
+
+## 3. Run a simple time series regression, with one X and no trend. Interpret it.
+```{r warning=FALSE}
+# simplest regression
+lm.trust <- lm(trustpress ~ fulltime_pct, data = by.year.ts)
+summary(lm.trust)
+```
+
+The percent people working full-time was negatively related to average confidence in press. The coefficient is statistically significant at 0.05 and we can reject the null of no effect.
+
+```{r warning=FALSE}
+# test for heteroskedasticity
+bptest(lm.trust)
+```
+
+There is no heteroskadasticity from the above regression.
+
+
+## 4. Run a time series regression with one X and trend. Interpret it. Perform autocorrelation diagnostics. Explain what you found.
+```{r warning=FALSE}
+lm.trust2 <- update(lm.trust, ~ . + year)
+summary(lm.trust2)
+```
+
+Net of the year trend, each percent more of full-time employed people increases ave. confidence in press by 0.0045776. This coefficient is significant at 0.05 level and we can reject the null of no effects.
+
+```{r warning=FALSE}
+# look for autocorrelation
+e2 <- lm.trust2$resid
+acf(e2, xlim = c(1,8), col = "red", lwd = 2)
+plot(e2)
+dwtest(lm.trust2)
+bgtest(lm.trust2)
+durbinWatsonTest(lm.trust2, max.lag=3)
+```
+
+From the ACF graph and residual trend graph, we cannot see any AR(1) left. In the dwtest and bgtest result, a prob of chi2 > 0.05 indicates no serial correlation.
+
+
+## 5. Consider running a time series regression with many Xs and trend. Interpret that. Check VIF.
+```{r warning=FALSE}
+lm.trust3 <- update(lm.trust2, ~ . + degreelt50_pct)
+summary(lm.trust3)
+```
+
+Net of the year trend, each percent more of full-time employed people increases ave. confidence in press by 0.003976. This coefficient is significant at 0.05 level and we can reject the null of no effects.
+Net of the year trend, each percent more of under 50 BA degree people decreases ave. confidence in press by 0.010286. This coefficient is significant at 0.05 level and we can reject the null of no effects.
+
+```{r warning=FALSE}
+vif(lm.trust3) # variance inflation factor 
+```
+
+Given such high correlations among variables, we want to look out for multicollinearity, which we might have with year and % of people under 50 with a BA+ degree.
+
+
+## 6. Run a first differenced time series regression. Interpret that.
+```{r warning=FALSE}
+firstD <- function(var, group, df){
+  bad <- (missing(group) & !missing(df))
+  if (bad) stop("if df is specified then group must also be specified")
+  
+  fD <- function(j){ c(NA, diff(j)) }
+  
+  var.is.alone <- missing(group) & missing(df)
+  
+  if (var.is.alone) {
+    return(fD(var))
+  }
+  if (missing(df)){
+    V <- var
+    G <- group
+  }
+  else{
+    V <- df[, deparse(substitute(var))]
+    G <- df[, deparse(substitute(group))]
+  }
+  
+  G <- list(G)
+  D.var <- by(V, G, fD)
+  unlist(D.var)
+}
+
+by.yearFD <- summarise(data.frame(by.year.ts),
+                       trustpress = firstD(trustpress), # using firstD functon from QMSS package
+                       age = firstD(age),
+                       fulltime_pct = firstD(fulltime_pct),
+                       degreelt50_pct = firstD(degreelt50_pct),
+                       year = year)
+
+lm.trust4 <- update(lm.trust3, data = by.yearFD)
+summary(lm.trust4)
+```
+
+For each 1 percentage point change in people working-full time, average confidence in press increases by 0.0039378, net of all other differences in the Xs and at any point in time. This coefficient is significant at 0.05 level and we can reject the null of no effects.
+For each 1 percentage point change in people getting BA, average confidence in press decreases by 0.0066733, net of all other differences in the Xs and at any point in time. This coefficient is not significant.
+
+
+## 7. Check your variables for unit roots. Do some tests. Interpret them.
+```{r warning=FALSE}
+# install.packages("fUnitRoots")
+library(fUnitRoots)
+adfTest(by.year.ts[,"trustpress"], lags = 0, type="ct")
+adfTest(by.year.ts[,"trustpress"], lags = 4, type="ct")
+```
+
+Either with 0 lag or with 4 lags, p-value is too high to be able to reject the null of Unit
+Root, therefore, we might have a unit root here.
+
+
+## 8. Perform an Automatic ARIMA on the residuals from one of your earlier models.  Tell me what it says.
+```{r warning=FALSE}
+library(forecast)
+e <- lm.trust$resid
+auto.arima(e, trace=TRUE)
+```
+
+auto.arima suggests that the errors from the static model is a random walk and we cannot reject unit root.
+
+
+## 9. Run an ARIMA that follows from Step 7.  Interpret that, too.
+```{r warning=FALSE}
+xvars.fat <- by.year.ts[,c("fulltime_pct")]
+
+arima.010 <- arima(by.year.ts[,"trustpress"], order = c(0,1,0), xreg = xvars.fat)
+summary(arima.010)
+```
+
+Each 1 percentage point difference in the percent of people with full-time job increases people's confidence in press by 0.0039 percentage points.
+
+
+
+

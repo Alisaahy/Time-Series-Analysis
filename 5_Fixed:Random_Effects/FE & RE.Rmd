@@ -1,0 +1,101 @@
+---
+output:
+  html_document: default
+  html_notebook: default
+---
+## Lab #2 -- Temporal Processes
+
+## Fixed/Random Effects
+   
+```{r message=FALSE, warning=FALSE}
+# Install packages
+library(plm)
+library(plyr)
+library(stargazer)
+
+# Import data file and generate a subset
+vars = c('spkath', "idnum", "panelwave", "realinc", "polviews", "degree")
+sub = data.table::fread('/Users/hengyuai/Desktop/TS/Lab2/panel-for-R.csv',
+                        sep = ",",
+                        select = vars)
+```
+
+```{r}
+# Recode the variable 'spkrac', which asks " There are always some people whose ideas are considered bad or dangerous by other people. For instance, somebody who is against churches and religion. If such a person wanted to make a speech in your city/town/community against churches and religion, should he be allowed to speak, or not?"
+sub$spkfree = 2 - sub$spkath # it's 1 if the respondent think the person should be allowed to speak, 0 if not.
+
+# Recode the 'degree' variable
+sub$hiedu = ifelse(sub$degree >= 2, 1, 0) ## recode 'degree', it's 1 if people got higher education(Junior college, Bachelor or Graduate)
+
+# Recode the 'polviews' variable
+sub$poliberal = 7 - sub$polviews # it's 0 if the individual is extremely conservative, 6 if the individual is extremely liberal
+```
+
+
+### 1. (a) Run an OLS regression, including at least one independent variable and a time variable (as dummies).  Explain how you think your independent variable relates to your dependent variable. Interpret your results. Did you find what you expected to find? 
+
+```{r}
+## Run a simple OLS regression
+OLS <- plm(spkfree ~ hiedu + as.factor(panelwave), # model formula
+               index = c("idnum", "panelwave"), # id & time variables
+               model = "pooling", 
+               data = sub) ## this is equivalent to above OLS ##
+
+summary(OLS)
+```
+
+The results meet with my expectations. It seems that people's education level is positively related to people's attitudes about public speaking freedom. People who received higher eductaion are 0.1454 points more supportive to the public speaking right of people whose ideas are considered bad or dangerous, on average, net of any particular person, across the first 3 waves of this panel. This coefficient is statistically significant at 0.001 level.
+
+
+### (b) Then run a fixed effect model version of that OLS model. Interpret your results. Did you find what you expected to find?  Why?  Why not? 
+
+```{r}
+FE <- plm(spkfree ~ hiedu + as.factor(panelwave), # model formula
+               index = c("idnum", "panelwave"), # id & time variables
+               model = "within", 
+               data = sub) ## fixed effects
+
+summary(FE)
+```
+
+In the fixed effect model, people's education level is positively related to people's attitudes about public speaking freedom. People who received higher eductaion are 0.0078 points more supportive to the public speaking right of some people whose ideas are considered bad or dangerous, on average, net of any particular person, across the first 3 waves of this panel. This coefficient is not statistically significant. 
+
+I didn't expect that the results from fixed effects model will be so largely different from that from OLS model. Compared with OLS regression, the coefficient becomes much smaller and the p value becomes much higher.
+
+
+### (c) Then include an additional predictor in your fixed effects model that you think might account for the initial relationship you found between your X and your Y.  What effect does that new independent variable have in your new regression?
+
+```{r}
+FE2 <- plm(spkfree ~ hiedu + poliberal + as.factor(panelwave), # model formula
+               index = c("idnum", "panelwave"), # id & time variables
+               model = "within", 
+               data = sub) ## fixed effects
+
+summary(FE2)
+```
+
+The new variable "poliberal" is also positively related to people's attitudes about public speaking freedom. People who are one level more liberal will be 0.001 points more supportive to the public speaking right of people whose ideas are considered bad or dangerous, on average, net of any particular person, across the first 3 waves of this panel. This coefficient is not statistically significant. 
+
+
+### (d) Then run a random effects model equivalent to your fixed effects model in step (b).  Interpret the results.
+
+```{r}
+RE <- plm(spkfree ~ hiedu + as.factor(panelwave), # model formula
+               index = c("idnum", "panelwave"), # id & time variables
+               model = "random", 
+               data = sub) ## random effects
+
+summary(RE)
+```
+
+In the random effects model, people's education level is positively related to people's attitudes about public speaking freedom. People who received higher eductaion are 0.113 points more supportive to the public speaking  right of people whose ideas are considered bad or dangerous, on average, net of any particular person, across the first 3 waves of this panel. This coefficient is statistically significant at the level of 0.001. 
+
+
+### (e) Run a Hausman test to compare your fixed effects and your random effects models.  What do you conclude? 
+
+```{r}
+phtest(FE, RE)
+```
+
+From the Hausman Test, we can see that the p-value is 0.001375, which means our models are different. Then, we should use the fixed effects model.
+

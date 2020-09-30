@@ -1,0 +1,110 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+  latex_engine: xelatex
+
+---
+# Option #2. Conduct an unpooled regression comparison.
+
+```{r, message=FALSE}
+library(data.table)
+library(QMSS)
+GSS=data.table::fread("/Users/hengyuai/Desktop/TS/Lab1/trends-gss.csv", sep = ",")
+library(plyr)
+library(ggplot2)
+```
+
+## Recodes 
+```{r, results='hide'}
+GSS[GSS$happy < 4]
+GSS$felgo=ifelse((GSS$happy <= 2), 1, 0)
+GSS$nyear=GSS$year-1973
+GSS$south=ifelse((GSS$region >= 5 & GSS$region <= 7), 1, 0)
+GSS$repub=ifelse((GSS$partyid >= 5 & GSS$partyid <= 6), 1, 0)
+```
+
+## Regressions
+```{r}
+felgo80=lm(felgo ~ repub + age + educ + as.factor(sex) + south + nyear, data=GSS, subset=(year > 1980 & year <= 1990 & partyid < 7))
+summary(felgo80)
+```
+
+```{r}
+felgo90=lm(felgo ~ repub + age + educ + as.factor(sex) + south + nyear, data=GSS, subset=(year > 1990 & year <= 2000 & partyid < 7))
+summary(felgo90)
+```
+
+```{r}
+felgo00=lm(felgo ~ repub + age + educ + as.factor(sex) + south + nyear, data = GSS, subset = (year > 2000 & year < 2010 & partyid < 7))
+summary(felgo00)
+```
+
+## Display regression
+```{r}
+library(stargazer) ##使用stargazer可以将R构建的模型结果以LATEX、HTML和ASCII格式输出，方便我们生成标准格式的表格结合rmarkdown来进行使用
+stargazer(felgo80, felgo90, felgo00, type = "text", omit.stat = c("rsq", "f"), add.lines=list(c("Years covered","1981-1990","1991-2000","2001-2010")))
+```
+significant difference between people with different party id, education level and age.
+
+## Visualize the trend
+```{r}
+library(plyr)
+by.year=ddply(GSS, "year", summarise, mean=mean(felgo, na.rm = T))
+plot(by.year, type = "l", lwd = 2, col = "navyblue", bty = "l")
+```
+
+## Compare coefficients
+```{r}
+library(QuantPsyc)
+library(lm.beta) 
+## lm.beta computes the standardized regression coeffients (beta) from an object of class (lm)
+lm.beta(felgo80)
+```
+
+```{r}
+lm.beta(felgo90)
+```
+
+```{r}
+lm.beta(felgo00)
+```
+
+```{r}
+library(broom) ##Broom让模型输出结果更整洁。broom包可以将lmnlst.test等功能的输出结果转为数据框的形式。
+## 这个包主要提供3个函数，即tidy/augment/glance，其中tidy是将模型的输出结果转为数据框，augment是将模型输出的参数值与模型参数整合到一个表中，而glance，正如其一瞥的意思，是将模型结果中的重要指标转为一行。
+hap80 = tidy(felgo80)
+hap80 = rename(hap80, c("estimate"="e80", "std.error"="se80"))
+hap90 = tidy(felgo90)
+hap90 = rename(hap90, c("estimate"="e90", "std.error"="se90"))
+hap00 = tidy(felgo00)
+hap00 = rename(hap00, c("estimate"="e00", "std.error"="se00"))
+new = cbind(hap80, hap90, hap00)
+new
+```
+
+## Applying the Z formula
+```{r}
+new$b1minusb28090 = new$e80 - new$e90
+new$denom8090 = sqrt(new$se80^2 + new$se90^2)
+new$Z8090 = new$b1minusb28090 / new$denom8090
+new$pvalue8090 = 2 * pnorm(abs(new$Z8090), lower.tail = FALSE) #lower.tail是逻辑变量，当它为TRUE是，分布函数的计算公式为：F(x)=P(X<=x)；当它为FALSE时，分布函数的计算公式为：F(x)=P(X>x)
+
+new$b1minusb29000=new$e90-new$e00
+new$denom9000=sqrt((new$se90^2+new$se00^2))
+new$Z9000=new$b1minusb29000/new$denom9000
+new$pvalue9000<- 2 * pnorm(abs(new$Z9000), lower.tail=FALSE)
+
+new$b1minusb28000=new$e80-new$e00
+new$denom8000=sqrt((new$se80^2+new$se00^2))
+new$Z8000=new$b1minusb28000/new$denom8000
+new$pvalue8000 <- 2 * pnorm(abs(new$Z8000), lower.tail=FALSE)
+new
+
+library("knitr")
+new1=kable(new[c("e80", "se80", "e90", "se90", "e00", "se00", "pvalue8090", "Z8090", "pvalue9000", "Z9000", "pvalue8000", "Z8000")])
+new1
+```
+
+
+

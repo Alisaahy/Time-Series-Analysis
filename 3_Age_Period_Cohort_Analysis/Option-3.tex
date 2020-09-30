@@ -1,0 +1,707 @@
+\documentclass[]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+\else % if luatex or xelatex
+  \ifxetex
+    \usepackage{mathspec}
+  \else
+    \usepackage{fontspec}
+  \fi
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\hypersetup{unicode=true,
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+% Redefines (sub)paragraphs to behave more like sections
+\ifx\paragraph\undefined\else
+\let\oldparagraph\paragraph
+\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+\let\oldsubparagraph\subparagraph
+\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+
+%%% Use protect on footnotes to avoid problems with footnotes in titles
+\let\rmarkdownfootnote\footnote%
+\def\footnote{\protect\rmarkdownfootnote}
+
+%%% Change title format to be more compact
+\usepackage{titling}
+
+% Create subtitle command for use in maketitle
+\providecommand{\subtitle}[1]{
+  \posttitle{
+    \begin{center}\large#1\end{center}
+    }
+}
+
+\setlength{\droptitle}{-2em}
+
+  \title{}
+    \pretitle{\vspace{\droptitle}}
+  \posttitle{}
+    \author{}
+    \preauthor{}\postauthor{}
+    \date{}
+    \predate{}\postdate{}
+  
+
+\begin{document}
+
+\hypertarget{option-3.-conduct-an-age-period-cohort-analysis.-make-plots-of-the-different-dimensions.-develop-a-parsimonious-model-of-what-you-think-is-going-on.-explain-your-results.}{%
+\subsection{Option 3. Conduct an age-period-cohort analysis. Make plots
+of the different dimensions. Develop a parsimonious model of what you
+think is going on. Explain your
+results.}\label{option-3.-conduct-an-age-period-cohort-analysis.-make-plots-of-the-different-dimensions.-develop-a-parsimonious-model-of-what-you-think-is-going-on.-explain-your-results.}}
+
+Question：关于结论，关于怎么确定parsimonious，关于summary
+collinearity的意义
+
+\hypertarget{install-packages-and-open-the-data-file}{%
+\subsection{install packages and open the data
+file}\label{install-packages-and-open-the-data-file}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(QMSS)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: lme4
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: Matrix
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: lmtest
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: zoo
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'zoo'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     as.Date, as.Date.numeric
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: MASS
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: plm
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: plyr
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: rdd
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: sandwich
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: AER
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: car
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: carData
+\end{verbatim}
+
+\begin{verbatim}
+## Registered S3 methods overwritten by 'car':
+##   method                          from
+##   influence.merMod                lme4
+##   cooks.distance.influence.merMod lme4
+##   dfbeta.influence.merMod         lme4
+##   dfbetas.influence.merMod        lme4
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: survival
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: Formula
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: VGAM
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: stats4
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: splines
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'VGAM'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:AER':
+## 
+##     tobit
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:car':
+## 
+##     logit
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:plm':
+## 
+##     has.intercept
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:lmtest':
+## 
+##     lrtest
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(ggplot2)}
+\KeywordTok{library}\NormalTok{(plyr)}
+\KeywordTok{library}\NormalTok{(}\StringTok{"rms"}\NormalTok{) }\CommentTok{# to do splines}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Loading required package: Hmisc
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: lattice
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'Hmisc'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:plyr':
+## 
+##     is.discrete, summarize
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:base':
+## 
+##     format.pval, units
+\end{verbatim}
+
+\begin{verbatim}
+## Loading required package: SparseM
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'SparseM'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:base':
+## 
+##     backsolve
+\end{verbatim}
+
+\begin{verbatim}
+## 
+## Attaching package: 'rms'
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:VGAM':
+## 
+##     calibrate, lrtest
+\end{verbatim}
+
+\begin{verbatim}
+## The following objects are masked from 'package:car':
+## 
+##     Predict, vif
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:lmtest':
+## 
+##     lrtest
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{library}\NormalTok{(Epi)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Attaching package: 'Epi'
+\end{verbatim}
+
+\begin{verbatim}
+## The following object is masked from 'package:lme4':
+## 
+##     factorize
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{vars =}\StringTok{ }\KeywordTok{c}\NormalTok{(}\StringTok{"chldidel"}\NormalTok{, }\StringTok{"age"}\NormalTok{, }\StringTok{"year"}\NormalTok{, }\StringTok{"cohort"}\NormalTok{, }\StringTok{"sex"}\NormalTok{)}
+\NormalTok{sub =}\StringTok{ }\NormalTok{data.table}\OperatorTok{::}\KeywordTok{fread}\NormalTok{(}\StringTok{"/Users/hengyuai/Desktop/TS/Lab1/trends-gss.csv"}\NormalTok{,}
+                        \DataTypeTok{sep =} \StringTok{","}\NormalTok{,}
+                        \DataTypeTok{select =}\NormalTok{ vars)}
+
+\NormalTok{sub =}\StringTok{ }\KeywordTok{na.omit}\NormalTok{(sub)}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{break-year-age-and-cohort-each-into-10-groups}{%
+\subsection{Break year, age and cohort each into 10
+groups}\label{break-year-age-and-cohort-each-into-10-groups}}
+
+\hypertarget{the-mutate-function-in-plyr-like-the-transform-function-in-base-r-adds-new-variables-to-a-data-frame-made-from-functions-of-existing-variables}{%
+\section{the mutate function in plyr (like the transform function in
+base R adds new variables to a data frame made from functions of
+existing
+variables)}\label{the-mutate-function-in-plyr-like-the-transform-function-in-base-r-adds-new-variables-to-a-data-frame-made-from-functions-of-existing-variables}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sub =}\StringTok{ }\KeywordTok{mutate}\NormalTok{(sub, }
+             \DataTypeTok{year.cut =} \KeywordTok{cut}\NormalTok{(year, }\DataTypeTok{breaks =} \DecValTok{10}\NormalTok{, }\DataTypeTok{labels =}\NormalTok{ F, }\DataTypeTok{right =}\NormalTok{ F),}
+             \DataTypeTok{age.cut =} \KeywordTok{cut}\NormalTok{(age, }\DataTypeTok{breaks =} \DecValTok{10}\NormalTok{, }\DataTypeTok{labels =}\NormalTok{ F, }\DataTypeTok{right =}\NormalTok{ F),}
+             \DataTypeTok{cohort.cut =} \KeywordTok{cut}\NormalTok{(cohort, }\DataTypeTok{breaks =} \DecValTok{10}\NormalTok{, }\DataTypeTok{labels =}\NormalTok{ F, }\DataTypeTok{right =}\NormalTok{ F))}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{tabulate-age-profiles-for-each-cohort}{%
+\subsection{Tabulate age-profiles for each
+cohort}\label{tabulate-age-profiles-for-each-cohort}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tab.age.cohort =}\StringTok{ }\KeywordTok{stat.table}\NormalTok{(}\DataTypeTok{index =} \KeywordTok{list}\NormalTok{(}\StringTok{"Age"}\NormalTok{ =}\StringTok{ }\NormalTok{age.cut, }\StringTok{"Cohort"}\NormalTok{ =}\StringTok{ }\NormalTok{cohort.cut),}
+                        \DataTypeTok{contents =} \KeywordTok{mean}\NormalTok{(chldidel),}
+                        \DataTypeTok{data =}\NormalTok{ sub,}
+                        \DataTypeTok{margins =}\NormalTok{ T)}
+
+
+\KeywordTok{print}\NormalTok{(tab.age.cohort, }\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  ------------------------------------------------------------------------------------------------ 
+##         -----------------------------------------Cohort------------------------------------------ 
+##  Age           1       2       3       4       5       6       7       8       9      10   Total  
+##  ------------------------------------------------------------------------------------------------ 
+##  1            NA      NA      NA      NA      NA   2.844   2.781   2.728   2.835   3.187   2.835  
+##  2            NA      NA      NA      NA      NA   2.674   2.681   2.676   2.949   2.933   2.730  
+##  3            NA      NA      NA      NA   3.003   2.802   2.718   2.926   3.114      NA   2.852  
+##  4            NA      NA      NA   3.577   3.061   2.719   2.840   3.085   2.571      NA   2.917  
+##  5            NA      NA      NA   3.054   2.975   2.806   3.091   3.285      NA      NA   2.987  
+##  6            NA      NA   3.407   3.114   2.902   2.920   3.039      NA      NA      NA   3.034  
+##  7            NA   4.231   3.088   2.936   2.980   2.976   2.927      NA      NA      NA   3.002  
+##  8            NA   3.523   3.217   3.041   3.109   2.757      NA      NA      NA      NA   3.161  
+##  9         3.702   3.490   3.368   3.320   3.436      NA      NA      NA      NA      NA   3.408  
+##  10        3.462   3.536   3.186   3.462   4.400      NA      NA      NA      NA      NA   3.422  
+##                                                                                                   
+##  Total     3.521   3.522   3.220   3.101   3.033   2.795   2.812   2.845   2.935   3.143   2.944  
+##  ------------------------------------------------------------------------------------------------
+\end{verbatim}
+
+\hypertarget{graph-age-profile-for-each-cohort}{%
+\subsection{Graph age-profile for each
+cohort}\label{graph-age-profile-for-each-cohort}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{age.cohort =}\StringTok{ }\KeywordTok{ddply}\NormalTok{(sub, }\KeywordTok{c}\NormalTok{(}\StringTok{"age.cut"}\NormalTok{, }\StringTok{"cohort.cut"}\NormalTok{), summarise, }\DataTypeTok{CHLDIDEL =} \KeywordTok{mean}\NormalTok{(chldidel))}
+\NormalTok{graph.age.cohort =}\StringTok{ }\KeywordTok{ggplot}\NormalTok{(age.cohort, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ age.cut, }\DataTypeTok{y =}\NormalTok{ CHLDIDEL, }\DataTypeTok{group =}\NormalTok{ cohort.cut, }\DataTypeTok{color =} \KeywordTok{factor}\NormalTok{(cohort.cut)))}
+\NormalTok{graph.age.cohort =}\StringTok{ }\NormalTok{graph.age.cohort }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{size =} \DecValTok{3}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_line}\NormalTok{()}
+\NormalTok{graph.age.cohort}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Option-3_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+\hypertarget{tabulate-cohort-chldidel-scores-over-time}{%
+\subsection{Tabulate cohort chldidel scores over
+time}\label{tabulate-cohort-chldidel-scores-over-time}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tab.year.cohort =}\StringTok{ }\KeywordTok{stat.table}\NormalTok{(}\DataTypeTok{index =} \KeywordTok{list}\NormalTok{(}\StringTok{"Year"}\NormalTok{ =}\StringTok{ }\NormalTok{year.cut, }\StringTok{"Cohort"}\NormalTok{ =}\StringTok{ }\NormalTok{cohort.cut),}
+                             \DataTypeTok{contents =} \KeywordTok{mean}\NormalTok{(chldidel),}
+                             \DataTypeTok{data =}\NormalTok{ sub,}
+                             \DataTypeTok{margins =}\NormalTok{ T)}
+\KeywordTok{print}\NormalTok{(tab.year.cohort, }\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  ------------------------------------------------------------------------------------------------ 
+##         -----------------------------------------Cohort------------------------------------------ 
+##  Year          1       2       3       4       5       6       7       8       9      10   Total  
+##  ------------------------------------------------------------------------------------------------ 
+##  1         3.374   3.608   3.256   3.220   3.140   2.842   2.776      NA      NA      NA   3.099  
+##  2         3.554   3.400   3.178   3.084   2.950   2.713   2.734      NA      NA      NA   2.941  
+##  3         4.278   3.685   3.192   3.047   3.071   2.719   2.683   2.913      NA      NA   2.918  
+##  4            NA   3.351   3.189   2.870   2.907   2.692   2.681   2.664      NA      NA   2.812  
+##  5            NA   3.574   3.227   2.994   2.871   2.726   2.730   2.653   3.125      NA   2.816  
+##  6            NA   3.368   3.204   2.925   2.977   2.731   2.705   2.661   2.805      NA   2.788  
+##  7            NA      NA   3.393   3.135   2.858   2.873   2.874   2.766   2.663      NA   2.859  
+##  8            NA      NA   3.224   3.211   3.012   2.777   2.899   2.860   2.782   4.000   2.893  
+##  9            NA      NA   3.000   3.579   3.199   3.057   3.082   3.084   3.007   3.043   3.096  
+##  10           NA      NA      NA   3.652   3.465   2.914   3.114   3.141   3.137   3.162   3.143  
+##                                                                                                   
+##  Total     3.521   3.522   3.220   3.101   3.033   2.795   2.812   2.845   2.935   3.143   2.944  
+##  ------------------------------------------------------------------------------------------------
+\end{verbatim}
+
+\hypertarget{graph-chldidel-overtime}{%
+\subsection{Graph chldidel overtime}\label{graph-chldidel-overtime}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{year.cohort =}\StringTok{ }\KeywordTok{ddply}\NormalTok{(sub, }\KeywordTok{c}\NormalTok{(}\StringTok{"year.cut"}\NormalTok{, }\StringTok{"cohort.cut"}\NormalTok{), summarise, }\DataTypeTok{CHLDIDEL =} \KeywordTok{mean}\NormalTok{(chldidel))}
+\NormalTok{graph.year.cohort =}\StringTok{ }\KeywordTok{ggplot}\NormalTok{(year.cohort, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ year.cut, }\DataTypeTok{y =}\NormalTok{ CHLDIDEL, }\DataTypeTok{group =}\NormalTok{ cohort.cut, }\DataTypeTok{color =} \KeywordTok{factor}\NormalTok{(cohort.cut)))}
+\NormalTok{graph.year.cohort =}\StringTok{ }\NormalTok{graph.year.cohort }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{size =} \DecValTok{3}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_line}\NormalTok{()}
+\NormalTok{graph.year.cohort}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Option-3_files/figure-latex/unnamed-chunk-6-1.pdf}
+
+\hypertarget{tabulate-age-profiles-by-survey-years}{%
+\subsection{Tabulate age-profiles by survey
+years}\label{tabulate-age-profiles-by-survey-years}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{tab.age.year =}\StringTok{ }\KeywordTok{stat.table}\NormalTok{(}\DataTypeTok{index =} \KeywordTok{list}\NormalTok{(}\StringTok{"Year"}\NormalTok{ =}\StringTok{ }\NormalTok{year.cut, }\StringTok{"AGE"}\NormalTok{ =}\StringTok{ }\NormalTok{age.cut),}
+                             \DataTypeTok{contents =} \KeywordTok{mean}\NormalTok{(chldidel),}
+                             \DataTypeTok{data =}\NormalTok{ sub,}
+                             \DataTypeTok{margins =}\NormalTok{ T)}
+\KeywordTok{print}\NormalTok{(tab.age.year, }\DataTypeTok{digits =} \DecValTok{3}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##  ------------------------------------------------------------------------------------------------ 
+##         -------------------------------------------AGE------------------------------------------- 
+##  Year          1       2       3       4       5       6       7       8       9      10   Total  
+##  ------------------------------------------------------------------------------------------------ 
+##  1         2.788   2.771   3.094   3.217   3.113   3.379   3.146   3.663   3.487   3.117   3.099  
+##  2         2.768   2.568   2.849   2.948   3.013   3.180   3.099   3.257   3.478   3.649   2.941  
+##  3         2.823   2.653   2.620   2.971   3.077   3.066   2.976   3.249   3.585   3.757   2.918  
+##  4         2.721   2.667   2.649   2.693   2.823   2.811   2.993   3.074   3.324   3.412   2.812  
+##  5         2.717   2.682   2.722   2.640   2.823   2.862   2.913   3.059   3.366   3.363   2.816  
+##  6         2.740   2.611   2.711   2.723   2.754   2.842   2.967   2.934   3.134   3.338   2.788  
+##  7         2.681   2.695   2.861   2.857   2.894   2.831   2.874   3.091   3.331   3.157   2.859  
+##  8         2.884   2.791   2.847   2.914   2.774   2.866   2.927   2.951   3.250   3.303   2.893  
+##  9         3.133   2.989   2.990   3.053   3.199   2.997   3.028   3.290   3.492   3.247   3.096  
+##  10        3.232   3.056   3.163   3.080   3.219   3.081   2.975   2.847   3.614   3.760   3.143  
+##                                                                                                   
+##  Total     2.835   2.730   2.852   2.917   2.987   3.034   3.002   3.161   3.408   3.422   2.944  
+##  ------------------------------------------------------------------------------------------------
+\end{verbatim}
+
+\hypertarget{graph-age-profiles-by-survey-years}{%
+\subsection{Graph age-profiles by survey
+years}\label{graph-age-profiles-by-survey-years}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{age.year =}\StringTok{ }\KeywordTok{ddply}\NormalTok{(sub, }\KeywordTok{c}\NormalTok{(}\StringTok{"age.cut"}\NormalTok{, }\StringTok{"year.cut"}\NormalTok{), summarise, }\DataTypeTok{CHLDIDEL =} \KeywordTok{mean}\NormalTok{(chldidel))}
+\NormalTok{graph.age.year =}\StringTok{ }\KeywordTok{ggplot}\NormalTok{(age.year, }\KeywordTok{aes}\NormalTok{(}\DataTypeTok{x =}\NormalTok{ age.cut, }\DataTypeTok{y =}\NormalTok{ CHLDIDEL, }\DataTypeTok{group =}\NormalTok{ year.cut, }\DataTypeTok{color =} \KeywordTok{factor}\NormalTok{(year.cut)))}
+\NormalTok{graph.age.year =}\StringTok{ }\NormalTok{graph.age.year }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_point}\NormalTok{(}\DataTypeTok{size =} \DecValTok{3}\NormalTok{) }\OperatorTok{+}\StringTok{ }\KeywordTok{geom_line}\NormalTok{()}
+\NormalTok{graph.age.year}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Option-3_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+It seems that there is an age pattern in the data. A clear cohort
+differences in mean chldidel. Strong period effects, it looks for all
+cohorts and ages in the recent period, they raise their chldidel in the
+recent decades.
+
+\hypertarget{test-collinearity}{%
+\subsection{Test collinearity}\label{test-collinearity}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(}\KeywordTok{lm}\NormalTok{(chldidel }\OperatorTok{~}\StringTok{ }\NormalTok{cohort }\OperatorTok{+}\StringTok{ }\NormalTok{age }\OperatorTok{+}\StringTok{ }\NormalTok{year, }\DataTypeTok{data =}\NormalTok{ sub))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = chldidel ~ cohort + age + year, data = sub)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.3545 -0.9508 -0.7516  0.2361  5.3167 
+## 
+## Coefficients: (1 not defined because of singularities)
+##              Estimate Std. Error t value Pr(>|t|)    
+## (Intercept) 0.4957064  1.4964852   0.331    0.740    
+## cohort      0.0010242  0.0007523   1.361    0.173    
+## age         0.0100601  0.0008885  11.323   <2e-16 ***
+## year               NA         NA      NA       NA    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.674 on 34924 degrees of freedom
+## Multiple R-squared:  0.008948,   Adjusted R-squared:  0.008891 
+## F-statistic: 157.7 on 2 and 34924 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{model-1-an-everything-model}{%
+\subsection{Model 1: An everything
+model}\label{model-1-an-everything-model}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{lm.chldidel =}\StringTok{ }\KeywordTok{lm}\NormalTok{(chldidel }\OperatorTok{~}\StringTok{ }\KeywordTok{factor}\NormalTok{(age.cut) }\OperatorTok{+}\StringTok{ }\KeywordTok{factor}\NormalTok{(year.cut) }\OperatorTok{+}\StringTok{ }\KeywordTok{factor}\NormalTok{(cohort.cut), }\DataTypeTok{data =}\NormalTok{ sub)}
+\KeywordTok{summary}\NormalTok{(lm.chldidel)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = chldidel ~ factor(age.cut) + factor(year.cut) + 
+##     factor(cohort.cut), data = sub)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.7015 -0.9417 -0.6946  0.2847  5.4088 
+## 
+## Coefficients:
+##                      Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)           3.28883    0.19169  17.157  < 2e-16 ***
+## factor(age.cut)2     -0.06712    0.03796  -1.768 0.077004 .  
+## factor(age.cut)3      0.05499    0.04758   1.156 0.247780    
+## factor(age.cut)4      0.09207    0.06085   1.513 0.130259    
+## factor(age.cut)5      0.12588    0.07618   1.652 0.098482 .  
+## factor(age.cut)6      0.11900    0.09027   1.318 0.187423    
+## factor(age.cut)7      0.03780    0.10606   0.356 0.721551    
+## factor(age.cut)8      0.12124    0.12195   0.994 0.320154    
+## factor(age.cut)9      0.31278    0.13840   2.260 0.023828 *  
+## factor(age.cut)10     0.28258    0.16125   1.752 0.079711 .  
+## factor(year.cut)2    -0.13426    0.03633  -3.695 0.000220 ***
+## factor(year.cut)3    -0.12563    0.04348  -2.889 0.003866 ** 
+## factor(year.cut)4    -0.22910    0.04834  -4.739 2.16e-06 ***
+## factor(year.cut)5    -0.21108    0.05247  -4.023 5.76e-05 ***
+## factor(year.cut)6    -0.23129    0.06128  -3.774 0.000161 ***
+## factor(year.cut)7    -0.14716    0.06609  -2.227 0.025965 *  
+## factor(year.cut)8    -0.11728    0.07485  -1.567 0.117137    
+## factor(year.cut)9     0.08496    0.08405   1.011 0.312087    
+## factor(year.cut)10    0.12751    0.09206   1.385 0.166044    
+## factor(cohort.cut)2   0.09993    0.13868   0.721 0.471168    
+## factor(cohort.cut)3  -0.09328    0.14078  -0.663 0.507576    
+## factor(cohort.cut)4  -0.19999    0.15050  -1.329 0.183910    
+## factor(cohort.cut)5  -0.26191    0.16454  -1.592 0.111430    
+## factor(cohort.cut)6  -0.45176    0.18052  -2.503 0.012335 *  
+## factor(cohort.cut)7  -0.40145    0.19740  -2.034 0.041989 *  
+## factor(cohort.cut)8  -0.36241    0.21729  -1.668 0.095348 .  
+## factor(cohort.cut)9  -0.33997    0.23845  -1.426 0.153955    
+## factor(cohort.cut)10 -0.24922    0.26235  -0.950 0.342148    
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.667 on 34899 degrees of freedom
+## Multiple R-squared:  0.01824,    Adjusted R-squared:  0.01748 
+## F-statistic: 24.02 on 27 and 34899 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{which-years-correspond-to-the-year-cuts}{%
+\subsection{Which years correspond to the year
+cuts?}\label{which-years-correspond-to-the-year-cuts}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{ddply}\NormalTok{(sub, }\StringTok{"year.cut"}\NormalTok{, summarise, }\DataTypeTok{min =} \KeywordTok{min}\NormalTok{(year), }\DataTypeTok{max =} \KeywordTok{max}\NormalTok{(year))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##    year.cut  min  max
+## 1         1 1972 1975
+## 2         2 1976 1978
+## 3         3 1982 1983
+## 4         4 1985 1986
+## 5         5 1988 1991
+## 6         6 1993 1994
+## 7         7 1996 1998
+## 8         8 2000 2002
+## 9         9 2004 2006
+## 10       10 2008 2012
+\end{verbatim}
+
+\hypertarget{model2-try-to-reduce-this-whole-model-just-to-period-effects-like-this}{%
+\subsection{Model2: Try to reduce this whole model just to period
+effects? \ldots{} like
+this:}\label{model2-try-to-reduce-this-whole-model-just-to-period-effects-like-this}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{sub}\OperatorTok{$}\NormalTok{late =}\StringTok{ }\KeywordTok{ifelse}\NormalTok{(sub}\OperatorTok{$}\NormalTok{year }\OperatorTok{>}\StringTok{ }\DecValTok{1994}\NormalTok{, }\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{)}
+\NormalTok{lm.chldidel.apc =}\StringTok{ }\KeywordTok{lm}\NormalTok{(chldidel }\OperatorTok{~}\StringTok{ }\NormalTok{age }\OperatorTok{+}\StringTok{ }\NormalTok{late }\OperatorTok{+}\StringTok{ }\KeywordTok{factor}\NormalTok{(cohort.cut), }\DataTypeTok{data =}\NormalTok{ sub)}
+\KeywordTok{summary}\NormalTok{(lm.chldidel.apc)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+## Call:
+## lm(formula = chldidel ~ age + late + factor(cohort.cut), data = sub)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -3.5459 -0.9499 -0.7177  0.2740  5.3104 
+## 
+## Coefficients:
+##                       Estimate Std. Error t value Pr(>|t|)    
+## (Intercept)           3.295511   0.166230  19.825  < 2e-16 ***
+## age                   0.002675   0.001350   1.982 0.047542 *  
+## late                  0.166642   0.032124   5.187 2.14e-07 ***
+## factor(cohort.cut)2   0.020381   0.132424   0.154 0.877683    
+## factor(cohort.cut)3  -0.275413   0.127436  -2.161 0.030688 *  
+## factor(cohort.cut)4  -0.392227   0.128402  -3.055 0.002255 ** 
+## factor(cohort.cut)5  -0.452281   0.132585  -3.411 0.000647 ***
+## factor(cohort.cut)6  -0.670064   0.137721  -4.865 1.15e-06 ***
+## factor(cohort.cut)7  -0.639287   0.143365  -4.459 8.25e-06 ***
+## factor(cohort.cut)8  -0.636393   0.150339  -4.233 2.31e-05 ***
+## factor(cohort.cut)9  -0.591355   0.161557  -3.660 0.000252 ***
+## factor(cohort.cut)10 -0.379791   0.174086  -2.182 0.029143 *  
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 1.67 on 34915 degrees of freedom
+## Multiple R-squared:  0.01405,    Adjusted R-squared:  0.01374 
+## F-statistic: 45.23 on 11 and 34915 DF,  p-value: < 2.2e-16
+\end{verbatim}
+
+\hypertarget{compare-r2}{%
+\subsection{Compare R\^{}2}\label{compare-r2}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{c}\NormalTok{(}\DataTypeTok{Model1 =} \KeywordTok{summary}\NormalTok{(lm.chldidel)}\OperatorTok{$}\NormalTok{adj, }\DataTypeTok{Model2 =} \KeywordTok{summary}\NormalTok{(lm.chldidel.apc)}\OperatorTok{$}\NormalTok{adj)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##     Model1     Model2 
+## 0.01748121 0.01373867
+\end{verbatim}
+
+
+\end{document}

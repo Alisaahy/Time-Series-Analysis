@@ -1,0 +1,130 @@
+---
+output:
+  html_document: default
+  html_notebook: default
+  pdf_document: default
+---
+
+## Option 3. Conduct an age-period-cohort analysis. Make plots of the different dimensions. Develop a parsimonious model of what you think is going on. Explain your results.
+
+Question：pattern, parsimonious，summary collinearity, rho
+
+## install packages and open the data file
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(QMSS)
+library(ggplot2)
+library(plyr)
+library("rms") # to do splines
+library(Epi)
+vars = c("chldidel", "age", "year", "cohort", "sex")
+sub = data.table::fread("/Users/hengyuai/Desktop/TS/Lab1/trends-gss.csv",
+                        sep = ",",
+                        select = vars)
+
+sub = na.omit(sub)
+```
+
+
+## Break year, age and cohort each into 10 groups
+```{r}
+sub = mutate(sub, 
+             year.cut = cut(year, breaks = 10, labels = F, right = F),
+             age.cut = cut(age, breaks = 10, labels = F, right = F),
+             cohort.cut = cut(cohort, breaks = 10, labels = F, right = F))
+```
+
+
+## Tabulate age-profiles for each cohort
+```{r}
+tab.age.cohort = stat.table(index = list("Age" = age.cut, "Cohort" = cohort.cut),
+                        contents = mean(chldidel),
+                        data = sub,
+                        margins = T)
+
+
+print(tab.age.cohort, digits = 3)
+```
+
+
+## Graph age-profile for each cohort
+```{r}
+age.cohort = ddply(sub, c("age.cut", "cohort.cut"), summarise, CHLDIDEL = mean(chldidel))
+graph.age.cohort = ggplot(age.cohort, aes(x = age.cut, y = CHLDIDEL, group = cohort.cut, color = factor(cohort.cut)))
+graph.age.cohort = graph.age.cohort + geom_point(size = 3) + geom_line()
+graph.age.cohort
+```
+
+
+## Tabulate cohort chldidel scores over time
+```{r}
+tab.year.cohort = stat.table(index = list("Year" = year.cut, "Cohort" = cohort.cut),
+                             contents = mean(chldidel),
+                             data = sub,
+                             margins = T)
+print(tab.year.cohort, digits = 3)
+```
+
+
+## Graph chldidel overtime
+```{r}
+year.cohort = ddply(sub, c("year.cut", "cohort.cut"), summarise, CHLDIDEL = mean(chldidel))
+graph.year.cohort = ggplot(year.cohort, aes(x = year.cut, y = CHLDIDEL, group = cohort.cut, color = factor(cohort.cut)))
+graph.year.cohort = graph.year.cohort + geom_point(size = 3) + geom_line()
+graph.year.cohort
+```
+
+
+## Tabulate age-profiles by survey years
+```{r}
+tab.age.year = stat.table(index = list("Year" = year.cut, "AGE" = age.cut),
+                             contents = mean(chldidel),
+                             data = sub,
+                             margins = T)
+print(tab.age.year, digits = 3)
+```
+
+
+## Graph age-profiles by survey years
+```{r}
+age.year = ddply(sub, c("age.cut", "year.cut"), summarise, CHLDIDEL = mean(chldidel))
+graph.age.year = ggplot(age.year, aes(x = age.cut, y = CHLDIDEL, group = year.cut, color = factor(year.cut)))
+graph.age.year = graph.age.year + geom_point(size = 3) + geom_line()
+graph.age.year
+```
+
+It seems that there is an age pattern in the data.
+A clear cohort differences in mean chldidel.
+Strong period effects, it looks for all cohorts and ages in the recent period, they raise their chldidel in the recent decades.
+
+
+## Test collinearity
+```{r}
+summary(lm(chldidel ~ cohort + age + year, data = sub))
+```
+
+
+## Model 1: An everything model
+```{r}
+lm.chldidel = lm(chldidel ~ factor(age.cut) + factor(year.cut) + factor(cohort.cut), data = sub)
+summary(lm.chldidel)
+```
+
+
+## Which years correspond to the year cuts?
+```{r}
+ddply(sub, "year.cut", summarise, min = min(year), max = max(year))
+```
+
+
+## Model2: Try to reduce this whole model just to period effects? … like this:
+```{r}
+sub$late = ifelse(sub$year > 1994, 1, 0)
+lm.chldidel.apc = lm(chldidel ~ age + late + factor(cohort.cut), data = sub)
+summary(lm.chldidel.apc)
+```
+
+
+## Compare R^2
+```{r}
+c(Model1 = summary(lm.chldidel)$adj, Model2 = summary(lm.chldidel.apc)$adj)
+```

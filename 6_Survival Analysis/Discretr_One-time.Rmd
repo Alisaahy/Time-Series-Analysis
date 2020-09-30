@@ -1,0 +1,144 @@
+---
+output:
+  html_notebook: default
+  html_document: default
+---
+## Lab #2 -- Temporal Processes
+
+1. subpt$combo <- do.call(paste, c(subpt[c("ytwo.two", "ythree.three")], sep = ""))doesn't work
+2. logit1 = glm(divorce~as.factor(nyear), subma, family = "binomial", subset = subma$year > 2006) why specify >2006. have already removed all divorced in panelwave1
+3. why cluster? why exp algorithm? exp(coef(logit))?
+4. divorcing logit. why it's different between male and female
+5. ytwo.two replace all NAs by 0, bad impact?
+6. logit_lag nyear and logit uses as.factor(nyear). if change one of them, same result. 
+7. difference between cox and Kaplan-Meier
+8. 83 84
+9. Schoenfeld test??
+
+
+## Survival Analysis 
+### Run a multiple variable survival analysis. You can perform the survival analysis either using discrete-time methods (i.e., event history analysis) or you can use Cox proportional hazards methods, either one is fine.
+### Explain how you determined the #risk window" (due to right truncation and left-censoring) and who is eligible for failure over the time you are studying.  
+### Explain whether the results were consistent with your expectations, and do that by interpreting the coefficients from the models, model fit, and so on.
+
+##Discrete event history analysis -- One-time events
+```{r message=FALSE, warning=FALSE}
+# Install packages
+library(plm)
+library(plyr)
+library(dplyr)
+library(tidyverse)
+library(stargazer)
+library(ggplot2)
+
+# Import data file and generate a subset
+vars = c("marital", "age", "year","educ", "idnum", "panelwave", "sex")
+sub = data.table::fread('/Users/hengyuai/Desktop/TS/Lab2/panel-for-R.csv',
+                        sep = ",",
+                        select = vars)
+```
+
+### (a) State what your "failure" variable is and how you expect your independent variables to affect it.
+```{r}
+# My failure variable is 'divorce', if the  and independent vairable is "age", "year", "sex" and "educ"
+# Recode the variable 'marital'
+sub[sub$marital < 6]
+sub$divorce = ifelse(sub$marital == 3, 1, 0) # it's 1 if the respondent divorced, 0 if not.
+```
+
+```{r}
+# Find all the people from Wave 1 that I want to remove: those already divorced 
+sub$drop = ifelse(sub$divorce == 1 & sub$panelwave == 1, 1, 0)
+
+# Because I have 3 rows per person, I need to drop all three of those rows at once, so I do that with merging and subsetting them away
+sub = merge(sub, aggregate(drop~idnum, data = sub, FUN = mean), by="idnum", suffixes=c("", ".all"))
+
+subma = subset (sub, sub$drop.all==0)
+
+# If using the code below, we can only drop the first year data of people who divorce at the panelwave1
+# sub$divbegin1 = ifelse(sub$divorce == 1 & sub$panelwave == 1, 1, 0)
+# sub = sub[sub$divbegin1 == 0]
+```
+
+```{r}
+# I want to see when people “die” so I look to see if it happens in Wave 2 or in Wave 3, or both
+subma$ytwo = ifelse(subma$divorce == 1 & subma$panelwave == 2, 2, 0)
+subma = merge(subma, aggregate(ytwo~idnum, data = subma, FUN = max), by="idnum", suffixes=c("",".two"))
+subma$ythree  = ifelse(subma$divorce == 1 & subma$panelwave == 3, 3, 0)
+subma = merge(subma, aggregate(ythree~idnum, data = subma, FUN = max), by="idnum", suffixes = c("",".three"))
+```
+
+```{r}
+# Now, I see what their pattern of death was across time
+
+# subma$combo <- do.call(paste, c(subma[c("ytwo.two", "ythree.three")], sep = ""))
+subma = subma %>% unite(combo, ytwo.two, ythree.three)
+table(subma$combo)
+```
+
+```{r}
+table(subma$divorce, subma$combo)
+```
+
+```{r}
+# Making missing in panelwave3 anybody who already died in panelwave2
+subma$divorce[subma$combo == "2_0" & subma$panelwave == 3] = NA
+subma$divorce[subma$combo == "2_3" & subma$panelwave == 3] = NA
+
+table(subma$divorce, subma$combo)
+```
+
+```{r}
+# This model just has the wave variable to see if the underlying hazard rate changes over time, >2006
+subma$nyear = subma$year - 2006
+
+# logit = glm(divorce~as.factor(nyear), subma, family = "binomial")
+# summary(logit)
+
+#44
+logit = glm(divorce~as.factor(nyear), subma, family = "binomial", subset = subma$year > 2006)
+summary(logit)
+```
+Wave 3 lowers the logit on divorcing by -0.411, relative to Wave 2. The coefficient is not statistically significantly.
+
+
+```{r}
+# clustering
+exp(coef(logit))
+```
+Wave 3 lowers the odds of finding full-time employment by 34% (=(0.66-1)*100%), relative to Wave 2; there isn't a statistically significantly lower risk of finding full-time employment in Wave 3.
+Wave 3 lowers the hazard ratio of divorcing by about 34%.
+
+```{r}
+# Adding some actual variables
+logit2 = glm(divorce~as.factor(nyear) + age + educ + as.factor(sex), subma, family="binomial", subset=subma$year > 2006)
+summary(logit2)
+```
+For each year older someone becomes, their logit of divorcing decreases by -0.0124, net of other factors. 
+For each year more education someone has, their logit of divorcing decreases by -0.0442, net of other factors.
+
+```{r}
+# what about more "younger" people?
+logit3 = glm(divorce~as.factor(nyear) + age + educ + sex, subma, family="binomial", subset=subma$year > 2006 & subma$age > 22 & subma$age < 59)
+summary(logit3)
+```
+
+The coefficients of age and educ both got stronger.
+
+```{r}
+# Consider interacting some of the Xs with the time variables
+logit4 = glm(divorce~as.factor(nyear) * as.factor(sex) + age + educ, subma, family="binomial", subset=subma$year > 2006 & subma$age > 22 & subma$age < 59)
+summary(logit4)
+```
+At baseline, women have a 0.1142 logit of divorcing, compared to men … but for Wave 3, relative to Wave 2, they have a logit 0.485 higher of divorcing, compared to men, net of other factors
+
+
+
+
+
+
+
+
+
+
+

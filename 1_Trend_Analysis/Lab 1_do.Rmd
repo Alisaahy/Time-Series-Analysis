@@ -1,0 +1,124 @@
+---
+output:
+  html_document: default
+  pdf_document: default
+---
+## Lab Report Number 1
+
+## Option 1: Run a trend analysis
+
+I am going to look at the trends in people's worry about losing their jobs. Specifically, respondents are asked: "Thinking about the next 12 months, how likely do you think it is that you will lose your job or be laid off -- very likely, fairly likely, not too likely, or not at all likely? (1) Very likely, (2) Fairly likely, (3) Not too likely, (4) Not at all likely?"
+
+## Install packages and open GSStrends.csv
+```{r, message=FALSE}
+library(data.table)
+library(QMSS)
+vars <- c("joblose", "year", "degree")  ## I am going to look at year and education
+sub = data.table::fread("/Users/hengyuai/Desktop/TS/Lab1/trends-gss.csv",
+                        sep = ",",
+                        select = vars)
+library(plyr)
+library(ggplot2)
+
+```
+
+## Recode variables to make it easier to interpret
+```{r, results='hide'}
+sub = na.omit(sub) ## the analysis will require complete cases and no missings on any of these values
+sub$worry = ifelse(sub$joblose <= 2, 1, 0) ## recode "jobloss", it is 1 if you are worried about losing your job
+sub[sub$degree < 5] ## delete the "DK" and "NA" answer in the degree column
+sub$hiedu = ifelse(sub$degree >= 3, 1, 0) ## recode "degree", you got higher education if you received a bachelor or graduate degree
+```
+
+## Show the distribution of the answer
+```{r}
+Tab(sub$worry)
+```
+This indicates that for all of the years, about 10.86% of respondents were worried about losing their jobs (Answer #1 and #2).
+
+## Get mean of worry by year using ddply from plyr package
+```{r}
+by.year = ddply(sub, "year", summarise, mean = mean(worry))
+{plot(by.year, type = "l", lwd = 2, col = "navyblue", bty ="l") ## plot the trend
+with(by.year, abline(line(year, mean), col = "maroon", lwd = 2, lty = 2))} ## add a fitted line 
+```
+
+From the graph, we can clearly see that the extent of people's worry about losing job has changed across time. People were less worried in the earlier period, from roughly 1973 until the 2002. After 2005, people became more pessimistic about their jobs.
+
+## OLS Regression
+I would like to develop a regression model that would capture the dynamics of people's worry about their jobs. As a default, I will fit a linear model, where year is entered in as a linear term. The model is below:
+```{r}
+lm.worry1 = lm(worry ~ year, sub)
+summary(lm.worry1)
+```
+This model shows that with each year that passes, people's worry increased, on average, by 0.000247 points ; it is not statistically significant (p > 0.1). The Adjusted Rsquared from this model is 6.432e-05, which is quite low. 
+Also, in the graph above, it is not hard to see that the linear fit line misses most of the ups and downs of the trend.
+
+## Consider a quadratic fit
+```{r}
+options(scipen = 999)
+lm.worry2 = lm(worry ~ year + I(year^2), sub)
+summary(lm.worry2)
+```
+In the quadratic model, the Rsquared increases to 0.0004009, suggesting that we can explain about 0.02 percent of the variation in people's worry with our time trend, better than the linear trend model.
+
+## Consider a cubic fit
+```{r}
+lm.worry3 = lm(worry ~ year + I(year^2) + I(year^3), sub)
+summary(lm.worry3)
+```
+In the cubic model, the Rsquared increases to 0.001111, suggesting that we can explain about 0.033 percent of the variation in concern for crime with our time trend, better than the linear trend model and the quadratic model
+
+## Graph the cubic trend
+```{r, warning=FALSE}
+by.year.q = ggplot(by.year, aes(x = year, y = mean)) + geom_line(color = "navyblue") ## plot the trend
+by.year.q + stat_smooth(methiod = "lm", formular = y ~ poly(x,3), color = "maroon", se = F, lty = 2) ## add a cubic fitted line
+```
+
+The graph above shows the trend of people's worry of losing job. This cubic fit line better catches the ups and downs of the trend than the linear fit line in the first graph.
+
+## Graph trend over time by degree
+```{r}
+by.year.edu = ddply(sub, c("year", "hiedu"), summarise, mean = mean(worry, na.rm = T))
+color_and_labels = scale_color_manual(values = c("navyblue", "darkmagenta"), labels = c("not receive high education", " receive high education"), name = "")
+g_by.year.edu = ggplot(by.year.edu, aes(x = year, y = mean, group = hiedu, color = factor(hiedu)))
+g_by.year.edu = g_by.year.edu + geom_line()
+g_by.year.edu + color_and_labels ## plot the trend
+plot_by_year_edu + stat_smooth(method = "lm", formula = y ~ poly(x,3), se = F, lty = 2) # add cubic fit lines
+
+```
+
+The graph above is the trend of people's worry of losing job, divided by their education. We can see that people with high education were less worried than people with lower education level. But it seems that those two groups of people follow a very similar pattern.
+
+## Run individual subsetted regressions and interacted model
+```{r}
+options(scipen = 999)
+lm4 = lm(worry ~ year + I(year^2) + I(year^3), sub, subset = hiedu==1)
+summary(lm4)
+```
+
+```{r}
+lm5 = lm(worry ~ year + I(year^2) + I(year^3), sub, subset = hiedu==0)
+summary(lm5)
+```
+Comparing people with different education levels, we can easily find out that people with higher education level remain a more consistent attitude toward their jobs, not worrying too much about being laid off, while people with lower education became more pessimistic about their jobs across time.
+
+## Try a complex set of interactions
+```{r}
+lm6 = lm(worry ~ year + I(year^2) + I(year^3) + hiedu + year:hiedu + I(year^2):hiedu + I(year^3):hiedu, sub)
+summary(lm6)
+```
+The Adjusted Rsquared from this interaction model is 0.009701.
+
+## Compare with the simple model
+```{r}
+lm7 = lm(worry ~ year + I(year^2) + I(year^3) + hiedu, sub)
+summary(lm7)
+```
+The Adjusted Rsquared from this model is 0.009273, lower than the complex interaction model.
+
+## Using Annova testing to examine whether adding in the interactions helps the model fit
+```{r}
+anova(lm7,lm6)
+```
+The interaction model turns out to be better fit.

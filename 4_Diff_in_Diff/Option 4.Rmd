@@ -1,0 +1,100 @@
+
+## Conduct a difference-in-difference analysis.  Explain which group is treated and which is not.  Provide pre-treatment trends and generate a regression summarizing your results.  Explain what you found. 
+
+===
+
+关于pdf里的parallel trends assumption，并没有single women的vairable，如何确定就是parallel
+
+## Open the data file
+```{r, message=FALSE, echo=FALSE}
+library(QMSS)
+require(foreign)
+sub = read.dta("/Users/hengyuai/Desktop/TS/Lab1/eitc.dta")
+
+```
+
+## Calculate the mean of different groups
+```{r}
+mean(sub[sub$children == 0, "work"])
+```
+
+```{r}
+mean(sub[sub$children == 1, "work"])
+```
+
+```{r}
+mean(sub[sub$children >= 1, "work"])
+```
+
+## recode
+```{r}
+sub$c.earn = sub$earn * sub$work #Make sure that people without work can't get any earnings
+z = names(sub)
+X = as.data.frame(sub$c.earn)
+X[ ] = lapply(X, function(x){replace(x, x == 0, NA)})
+sub = cbind(sub, X)
+sub$c.earn = NULL
+
+sub$post93 = as.numeric(sub$year >= 1994)
+sub$anykids = as.numeric(sub$children > 0)
+
+# Take average value of 'work' by year, conditional on highedu
+minfo = aggregate(sub$work, list(sub$year,sub$anykids == 1), mean)
+minfo
+```
+
+## Look at the table of means by group, over time
+```{r}
+# rename column headings (variables)
+names(minfo) = c("YR","Treatment","LFPR") #LFPR means "labor force participation rate"
+# Attach a new column with labels
+minfo$Group[1:6] = "Single women, no children"
+minfo$Group[7:12] = "Single women, children"
+minfo
+```
+
+## Make a graph
+```{r}
+library(ggplot2)
+qplot(YR, LFPR, data = minfo, geom = c("point", "line"), color = Group, xlab = "Year", ylab = "Labor Force Participation Rate")
+```
+
+## Just looking at differences in means between single women without kids vs. single women with any kids
+```{r}
+a = colMeans(subset(sub, post93 == 0 & anykids == 0, select = work))
+b = colMeans(subset(sub, post93 == 1 & anykids == 0, select = work))
+c = colMeans(subset(sub, post93 == 0 & anykids == 1, select = work))
+d = colMeans(subset(sub, post93 == 1 & anykids == 1, select = work))
+
+(d-b)-(c-a)
+```
+
+## In regression term
+```{r}
+reg1 = lm(work ~ post93 + anykids + post93 * anykids, data = sub)
+summary(reg1)
+```
+post93:anykids的cofficient就是(d-b)-(c-a)的difference in differences
+
+## Add covariates
+```{r}
+options(scipen = 999)
+reg2 = lm(work ~ post93 + anykids + post93 * anykids + nonwhite + age + I(age^2) + ed + finc +I(finc-earn), data = sub)
+summary(reg2)
+```
+
+## Try a different year to see if I can induce a stat. sig. result and check if choosing the year 94 is correct
+```{r}
+# sub set the data, including only years before 1994.
+subbefore = sub[sub$year <= 1993, ]
+
+# 假设可能的treatment在92年。Create a new "after treatment" dummy variable and interaction term
+subbefore$post91 = as.numeric(subbefore$year >= 1992)
+reg3 = lm(work ~ anykids  + post91 + post91 * anykids, data = subbefore)
+summary(reg3)
+```
+The coefficient is not significant.
+
+
+
+
